@@ -43,5 +43,6 @@ async def set_webhook(application, webhook_uri):
         await application.bot.setWebhook(webhook_url)
 
 if __name__ == "__main__":
+    # Запуск бота без asyncio.run()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run_bot_service())
