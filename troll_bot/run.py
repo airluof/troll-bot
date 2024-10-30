@@ -6,10 +6,12 @@ from troll_bot import CERTIFICATE_PATH, BOT_URL
 from troll_bot.handler import get_update_handler, get_forward_handler, get_help_handler
 from troll_bot.utils import generate_random_string
 
+# Настройка логгирования
+logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 async def run_bot_service():
-    token = os.environ['BOT_TOKEN']
+    token = os.environ['BOT_TOKEN']  # Получаем токен из переменной окружения
     application = ApplicationBuilder().token(token).build()
 
     # Добавляем обработчики
@@ -21,7 +23,9 @@ async def run_bot_service():
         webhook_path = generate_random_string(length=20)
         webhook_uri = '/' + webhook_path
         await set_webhook(application, webhook_uri)  # Обратите внимание на await
-        await application.run_webhook(listen='0.0.0.0', port=5000, path=webhook_uri)
+        # Используем PORT из переменной окружения
+        port = int(os.environ.get('PORT', 5000))
+        await application.run_webhook(listen='0.0.0.0', port=port, path=webhook_uri)
     else:
         await application.run_polling(poll_interval=0.1)
 
@@ -35,3 +39,7 @@ async def set_webhook(application, webhook_uri):
             await application.bot.setWebhook(webhook_url, certificate)
     else:
         await application.bot.setWebhook(webhook_url)
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(run_bot_service())
