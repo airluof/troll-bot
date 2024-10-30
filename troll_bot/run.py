@@ -1,5 +1,6 @@
 import logging
 import os
+import asyncio
 from telegram.ext import ApplicationBuilder
 
 from troll_bot import CERTIFICATE_PATH, BOT_URL
@@ -40,5 +41,5 @@ async def set_webhook(application, webhook_uri):
         await application.bot.setWebhook(webhook_url)
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(run_bot_service())
+    loop = asyncio.get_event_loop()  # Получаем текущий цикл событий
+    loop.run_until_complete(run_bot_service())  # Запускаем функцию
