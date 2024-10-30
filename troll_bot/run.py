@@ -1,38 +1,49 @@
 import logging
 import os
-import asyncio
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
+import time
 
-# Настройка логгирования
-logging.basicConfig(level=logging.INFO)
+from telegram.ext import Updater
+
+from troll_bot import CERTIFICATE_PATH, BOT_URL
+from troll_bot.handler import get_update_handler, get_forward_handler, get_help_handler
+from troll_bot.utils import generate_random_string
+
+
 log = logging.getLogger(__name__)
 
-# Обработчик команды /start
-async def start(update, context):
-    await update.message.reply_text("Привет! Я бот. Как я могу помочь вам?")
 
-# Обработчик текстовых сообщений
-async def echo(update, context):
-    log.info(f"Received message: {update.message.text}")  # Логирование сообщения
-    await update.message.reply_text(f"Вы сказали: {update.message.text}")
+def run_bot_service():
+    token = os.environ['BOT_TOKEN']
+    updater = Updater(token, workers=10)
 
-def get_update_handler():
-    return MessageHandler(filters.TEXT & ~filters.COMMAND, echo)
+    updater.dispatcher.add_handler(get_update_handler())
+    updater.dispatcher.add_handler(get_forward_handler())
+    updater.dispatcher.add_handler(get_help_handler())
 
-def get_start_handler():
-    return CommandHandler("start", start)
+    if BOT_URL:
+        webhook_path = generate_random_string(length=20)
+        webhook_uri = '/' + webhook_path
+        set_webhook(updater, webhook_uri)
+        updater.start_webhook('0.0.0.0', 5000, webhook_path)
+    else:
+        updater.start_polling(poll_interval=0.1, timeout=10)
 
-async def run_bot_service():
-    token = os.environ['BOT_TOKEN']  # Получаем токен из переменной окружения
-    application = ApplicationBuilder().token(token).build()
+    running = True
+    while running:
+        try:
+            time.sleep(20000)
+        except KeyboardInterrupt:
+            running = False
+    updater.stop()
 
-    # Добавляем обработчики
-    application.add_handler(get_start_handler())  # Обработчик команды /start
-    application.add_handler(get_update_handler())  # Обработчик текстовых сообщений
 
-    log.info("Handlers added. Starting bot in polling mode...")
-    
-    await application.run_polling(poll_interval=0.1)
+def set_webhook(updater, webhook_uri):
+    base_url = BOT_URL
+    webhook_url = base_url + webhook_uri
+    log.info('Setting URL: %s', webhook_url)
 
-if __name__ == "__main__":
-    asyncio.run(run_bot_service())  # Запускаем функцию
+    if CERTIFICATE_PATH:
+        updater.bot.setWebhook(webhook_url, open(CERTIFICATE_PATH, 'rb'))
+    else:
+        updater.bot.setWebhook(webhook_url)
+
