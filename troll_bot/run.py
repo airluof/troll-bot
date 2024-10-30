@@ -20,14 +20,9 @@ async def run_bot_service():
     application.add_handler(get_forward_handler())
     application.add_handler(get_help_handler())
 
-    if BOT_URL:
-        webhook_path = generate_random_string(length=20)
-        webhook_uri = '/' + webhook_path
-        await set_webhook(application, webhook_uri)  # Установка вебхука
-        port = int(os.environ.get('PORT', 5000))
-        await application.run_webhook(listen='0.0.0.0', port=port)  # Убираем параметр path
-    else:
-        await application.run_polling(poll_interval=0.1)
+    # Запускаем бота в режиме polling
+    log.info("Running in polling mode...")
+    await application.run_polling(poll_interval=0.1)
 
 async def set_webhook(application, webhook_uri):
     base_url = BOT_URL
