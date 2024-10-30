@@ -29,6 +29,7 @@ async def run_bot_service():
         webhook_path = generate_random_string(length=20)  # Генерируем случайный путь для вебхука
         webhook_uri = '/' + webhook_path
         await set_webhook(application, webhook_uri)  # Устанавливаем вебхук
+        await check_webhook(application)  # Проверка установленного вебхука
         port = int(os.environ.get("PORT", 5000))
         log.info(f"Запуск в режиме вебхука на порту {port} с URL: {BOT_URL}")
         await application.run_webhook(listen='0.0.0.0', port=port, path=webhook_uri)
@@ -44,11 +45,15 @@ async def set_webhook(application, webhook_uri):
     try:
         if CERTIFICATE_PATH:
             with open(CERTIFICATE_PATH, 'rb') as certificate:
-                await application.bot.setWebhook(webhook_url, certificate=certificate)  # Устанавливаем вебхук с сертификатом
+                await application.bot.setWebhook(webhook_url, certificate=certificate)  # Устанавливаем вебхука с сертификатом
         else:
-            await application.bot.setWebhook(webhook_url)  # Устанавливаем вебхук без сертификата
+            await application.bot.setWebhook(webhook_url)  # Устанавливаем вебхука без сертификата
     except Exception as e:
         log.error(f"Ошибка при установке вебхука: {e}")
+
+async def check_webhook(application):
+    webhook_info = await application.bot.getWebhookInfo()
+    log.info("Текущая информация о вебхуке: %s", webhook_info)  # Логируем информацию о вебхуке
 
 if __name__ == "__main__":
     keep_alive()  # Запускаем Flask-сервер для поддержания активности
