@@ -55,6 +55,18 @@ async def check_webhook(application):
     webhook_info = await application.bot.getWebhookInfo()
     log.info("Текущая информация о вебхуке: %s", webhook_info)  # Логируем информацию о вебхуке
 
+# Тестовая функция для отправки тестового сообщения
+async def test_send_message(application):
+    bot = application.bot
+    chat_id = <ВАШ_ЧАТ_ID>
+    try:
+        await bot.sendMessage(chat_id=chat_id, text="Тестовое сообщение")
+        log.info("Тестовое сообщение отправлено успешно.")
+    except Exception as e:
+        log.error(f"Не удалось отправить тестовое сообщение: {e}")
+
 if __name__ == "__main__":
     keep_alive()  # Запускаем Flask-сервер для поддержания активности
+    application = ApplicationBuilder().token(os.getenv('BOT_TOKEN')).build()
+    asyncio.run(test_send_message(application))  # Тестовая отправка сообщения
     asyncio.run(run_bot_service())  # Запускаем бота
