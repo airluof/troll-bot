@@ -1,6 +1,6 @@
 import logging
 
-from telegram.ext.dispatcher import run_async
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 from telegram.ext import MessageHandler, CommandHandler, Filters
 
 from troll_bot.database import save_message
