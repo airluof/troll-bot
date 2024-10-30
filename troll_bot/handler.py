@@ -1,6 +1,6 @@
 import logging
 from telegram import Update
-from telegram.ext import ContextTypes, CommandHandler, MessageHandler, Filters
+from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, Filters
 
 from troll_bot.database import save_message
 from troll_bot.reply import (get_random_message_word, get_reply_message, 
@@ -8,6 +8,8 @@ from troll_bot.reply import (get_random_message_word, get_reply_message,
                              reply_text_message, reply_audio_message, 
                              reply_gif_message)
 
+# Настройка логирования
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
 
 async def reply_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -64,3 +66,18 @@ def get_forward_handler():
 
 def get_help_handler():
     return CommandHandler("help", print_help)
+
+def main() -> None:
+    # Замените 'YOUR_BOT_TOKEN' на токен вашего бота
+    application = ApplicationBuilder().token('YOUR_BOT_TOKEN').build()
+
+    # Регистрация обработчиков
+    application.add_handler(get_update_handler())
+    application.add_handler(get_forward_handler())
+    application.add_handler(get_help_handler())
+
+    # Запуск бота
+    application.run_polling()
+
+if __name__ == '__main__':
+    main()
