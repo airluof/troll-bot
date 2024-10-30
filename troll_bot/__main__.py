@@ -1,6 +1,6 @@
+import asyncio
 import logging
 import sys
-import asyncio  # Импортируем asyncio для работы с асинхронностью
 
 from docopt import docopt
 from troll_bot.run import run_bot_service
@@ -8,7 +8,7 @@ from troll_bot.run import run_bot_service
 log = logging.getLogger(__name__)
 console_handler = logging.StreamHandler(sys.stderr)
 
-async def main():  # Объявляем функцию как асинхронную
+async def main():
     """Troll Bot - Annoy your friends with this Telegram Bot.
     Usage:
       troll-bot [options]
@@ -33,5 +33,5 @@ def setup_console_handler(handler, verbose):
     else:
         handler.setLevel(logging.INFO)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())  # Запускаем асинхронную функцию main
