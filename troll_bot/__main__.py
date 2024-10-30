@@ -3,10 +3,12 @@ from troll_bot.main import main
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())  # Попробуем запустить с помощью asyncio.run()
-    except RuntimeError as e:
-        if "This event loop is already running" in str(e):
-            loop = asyncio.get_event_loop()
-            loop.create_task(main())  # Запускаем асинхронную задачу, если цикл уже запущен
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # Если цикл событий уже запущен, используем его для выполнения main
+            loop.create_task(main())
         else:
-            raise
+            # Если цикл не запущен, запускаем его
+            asyncio.run(main())
+    except Exception as e:
+        print(f"An error occurred: {e}")
