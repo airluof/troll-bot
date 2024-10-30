@@ -10,7 +10,7 @@ async def message_handler(update, context):
 
 async def main():
     # Создаем приложение бота
-    application = ApplicationBuilder().token("YOUR_BOT_TOKEN").build()
+    application = ApplicationBuilder().token("7976164431:AAEZbTyD8kGhwcC67fCw5E1_fot5x3fjHcc").build()
 
     # Добавляем обработчики команд и сообщений
     application.add_handler(CommandHandler("start", start_handler))
