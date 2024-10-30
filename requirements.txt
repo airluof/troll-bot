@@ -8,3 +8,4 @@ requests==2.28.0
 urllib3==1.26.0
 flask
 dnspython
+uvicorn==0.22.0
