@@ -1,7 +1,7 @@
 import logging
 import os
 import asyncio
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
+from telegram.ext import ApplicationBuilder
 from webserver import keep_alive  # Импортируем функцию для запуска Flask-сервера
 
 from troll_bot import CERTIFICATE_PATH, BOT_URL
@@ -41,11 +41,14 @@ async def set_webhook(application, webhook_uri):
     webhook_url = base_url + webhook_uri
     log.info('Установка вебхука по URL: %s', webhook_url)  # Логируем установку вебхука
 
-    if CERTIFICATE_PATH:
-        with open(CERTIFICATE_PATH, 'rb') as certificate:
-            await application.bot.setWebhook(webhook_url, certificate=certificate)  # Устанавливаем вебхук с сертификатом
-    else:
-        await application.bot.setWebhook(webhook_url)  # Устанавливаем вебхук без сертификата
+    try:
+        if CERTIFICATE_PATH:
+            with open(CERTIFICATE_PATH, 'rb') as certificate:
+                await application.bot.setWebhook(webhook_url, certificate=certificate)  # Устанавливаем вебхук с сертификатом
+        else:
+            await application.bot.setWebhook(webhook_url)  # Устанавливаем вебхук без сертификата
+    except Exception as e:
+        log.error(f"Ошибка при установке вебхука: {e}")
 
 if __name__ == "__main__":
     keep_alive()  # Запускаем Flask-сервер для поддержания активности
