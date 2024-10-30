@@ -1,21 +1,20 @@
-import logging
 import asyncio
 from troll_bot.run import run_bot_service
-
-async def main():
-    await run_bot_service()
+from webserver import keep_alive  # Импортируем функцию для запуска Flask-сервера
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    keep_alive()  # Запускаем Flask-сервер
 
     try:
-        # Проверяем, есть ли уже запущенный цикл событий
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            # Если цикл событий уже запущен, создаем задачу
-            asyncio.ensure_future(main())
-        else:
-            # Если цикл событий не запущен, запускаем его
-            loop.run_until_complete(main())
-    except Exception as e:
-        logging.error(f"Ошибка при запуске: {e}")
+        # Проверяем, есть ли уже активный event loop
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        # Если нет активного event loop, создаем его
+        loop = None
+
+    if loop and loop.is_running():
+        # Если цикл уже работает, создаем задачу для run_bot_service
+        loop.create_task(run_bot_service())
+    else:
+        # Если нет активного цикла, создаем и запускаем новый
+        asyncio.run(run_bot_service())
