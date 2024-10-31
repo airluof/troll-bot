@@ -6,4 +6,4 @@ if __name__ == "__main__":
     keep_alive()  # Запускаем Flask-сервер для поддержки вебхука
     
     # Создаем и запускаем асинхронный event loop для бота
-    asyncio.run(run_bot_service())  
+    asyncio.run(run_bot_service())
