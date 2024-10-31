@@ -1,3 +1,6 @@
+# Here is the updated code for main.py with explanations for key changes
+
+updated_main_py_content = """
 import logging
 import os
 import asyncio
@@ -26,47 +29,32 @@ async def run_bot_service():
     application.add_handler(get_help_handler())
 
     if BOT_URL:
-        webhook_path = generate_random_string(length=20)  # Генерируем случайный путь для вебхука
+        webhook_path = generate_random_string(length=20)
         webhook_uri = '/' + webhook_path
-        await set_webhook(application, webhook_uri)  # Устанавливаем вебхук
-        await check_webhook(application)  # Проверка установленного вебхука
-        port = int(os.environ.get("PORT", 5000))
-        log.info(f"Запуск в режиме вебхука на порту {port} с URL: {BOT_URL}")
-        await application.run_webhook(listen='0.0.0.0', port=port, path=webhook_uri)
+        await set_webhook(application, webhook_uri)  # Установка вебхука
+        port = int(os.getenv('PORT', 5000))
+        await application.run_webhook(listen='0.0.0.0', port=port, url_path=webhook_uri)
     else:
-        log.info("Запуск в режиме опроса (polling)")
-        await application.run_polling(poll_interval=0.1)  # Запускаем бота в режиме опроса
+        await application.run_polling(poll_interval=0.1)
 
 async def set_webhook(application, webhook_uri):
     base_url = BOT_URL
     webhook_url = base_url + webhook_uri
-    log.info('Установка вебхука по URL: %s', webhook_url)  # Логируем установку вебхука
+    log.info('Setting URL: %s', webhook_url)
 
-    try:
-        if CERTIFICATE_PATH:
-            with open(CERTIFICATE_PATH, 'rb') as certificate:
-                await application.bot.setWebhook(webhook_url, certificate=certificate)  # Устанавливаем вебхука с сертификатом
-        else:
-            await application.bot.setWebhook(webhook_url)  # Устанавливаем вебхука без сертификата
-    except Exception as e:
-        log.error(f"Ошибка при установке вебхука: {e}")
-
-async def check_webhook(application):
-    webhook_info = await application.bot.getWebhookInfo()
-    log.info("Текущая информация о вебхуке: %s", webhook_info)  # Логируем информацию о вебхуке
-
-# Тестовая функция для отправки тестового сообщения
-async def test_send_message(application):
-    bot = application.bot
-    chat_id = <ВАШ_ЧАТ_ID>
-    try:
-        await bot.sendMessage(chat_id=chat_id, text="Тестовое сообщение")
-        log.info("Тестовое сообщение отправлено успешно.")
-    except Exception as e:
-        log.error(f"Не удалось отправить тестовое сообщение: {e}")
+    if CERTIFICATE_PATH:
+        with open(CERTIFICATE_PATH, 'rb') as certificate:
+            await application.bot.set_webhook(webhook_url, certificate=certificate)
+    else:
+        await application.bot.set_webhook(webhook_url)
 
 if __name__ == "__main__":
-    keep_alive()  # Запускаем Flask-сервер для поддержания активности
-    application = ApplicationBuilder().token(os.getenv('BOT_TOKEN')).build()
-    asyncio.run(test_send_message(application))  # Тестовая отправка сообщения
-    asyncio.run(run_bot_service())  # Запускаем бота
+    keep_alive()  # Запускаем Flask-сервер для поддержки вебхука
+    asyncio.run(run_bot_service())  # Асинхронно запускаем бота
+"""
+
+# Saving updated content to the same file to apply the changes
+with open(file_path, 'w', encoding='utf-8') as file:
+    file.write(updated_main_py_content)
+
+updated_main_py_content[:1000]  # Display first 1000 characters of the updated file for confirmation
