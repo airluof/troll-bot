@@ -1,7 +1,7 @@
 import os
 import logging
 from pymongo import MongoClient
-from pymongo.errors import ConnectionError
+from pymongo.errors import ServerSelectionTimeoutError  # Заменено на ServerSelectionTimeoutError
 
 # Установка уровня логирования
 logging.basicConfig(level=logging.DEBUG)
@@ -19,7 +19,7 @@ try:
     # Попытка получить список баз данных для проверки подключения
     client.list_database_names()
     logging.info("Successfully connected to MongoDB.")
-except ConnectionError as e:
+except ServerSelectionTimeoutError as e:  # Заменено на ServerSelectionTimeoutError
     logging.error("Failed to connect to MongoDB: %s", e)
     client = None  # Убедитесь, что client установлен в None в случае ошибки
 
