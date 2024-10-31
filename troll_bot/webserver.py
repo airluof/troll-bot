@@ -7,6 +7,10 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
+@app.route('/')
+def home():
+    return "Bot server is running!"
+
 @app.route('/<path:webhook_path>', methods=['POST'])
 def handle_webhook(webhook_path):
     log.info("Webhook path: %s", webhook_path)  # Логируем путь вебхука
