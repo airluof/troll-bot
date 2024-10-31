@@ -70,4 +70,5 @@ async def search_messages(chat_id, user_id=None):
         values.append(user_id)
     
     try:
-        messages = await conn.fetch(query, *v
+        messages = await conn.fetch(query, *v)
+
