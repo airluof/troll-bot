@@ -5,7 +5,7 @@ import logging
 import os
 import asyncio
 from telegram.ext import ApplicationBuilder
-from webserver import keep_alive  # Импортируем функцию для запуска Flask-сервера
+from troll_bot.webserver import keep_alive  # Импортируем функцию для запуска Flask-сервера
 
 from troll_bot import CERTIFICATE_PATH, BOT_URL
 from troll_bot.handler import get_update_handler, get_forward_handler, get_help_handler
