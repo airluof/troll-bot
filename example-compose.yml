@@ -1,29 +1,27 @@
-troll-bot:
-  restart: always
-  image: pando85/troll-bot
-  links:
-    - mongo
-  ports:
-    - "5000:5000"
-  volumes:
-    - ./cert.pem:/tmp/cert.pem:ro
-  environment:
-    - BOT_TOKEN= Telegram Bot API token
-    - BOT_URL= Telegram Bot URL
-    - CERTIFICATE_PATH=/tmp/cert.pem
-    - MONGO_URI=mongodb://mongo:27017
+version: '3'
+services:
+  troll-bot:
+    restart: always
+    image: pando85/troll-bot
+    links:
+      - mongo
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./cert.pem:/tmp/cert.pem:ro
+    environment:
+      - BOT_TOKEN=YourTelegramBotToken  # Убедитесь, что токен корректный
+      - BOT_URL=YourTelegramBotURL      # Убедитесь, что URL корректный
+      - CERTIFICATE_PATH=/tmp/cert.pem
+      - MONGO_URI=mongodb://mongo:27017  # Подключение к локальному MongoDB
 
-mongo:
-  restart: always
-  image: mongo
-  volumes_from:
-    - data
-  expose:
-    - "27017"
+  mongo:
+    restart: always
+    image: mongo:latest  # Используйте последнюю стабильную версию
+    volumes:
+      - data:/data/db  # Задайте том для хранения данных
+    expose:
+      - "27017"
 
-data:
-  restart: always
-  image: mongo:3.2.4
-  volumes:
-    - /data/db
-  command: "true"
+volumes:
+  data:  # Определите том для хранения данных
