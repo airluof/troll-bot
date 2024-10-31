@@ -1,6 +1,6 @@
 import asyncio
 from troll_bot.run import run_bot_service
-from webserver import keep_alive  # Импортируем функцию для запуска Flask-сервера
+from troll_bot.webserver import keep_alive  # Импортируем функцию для запуска Flask-сервера
 
 if __name__ == "__main__":
     keep_alive()  # Запускаем Flask-сервер для поддержки вебхука
