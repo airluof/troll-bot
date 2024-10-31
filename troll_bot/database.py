@@ -1,32 +1,32 @@
 import os
 import logging
-from pymongo import MongoClient
-from pymongo.errors import ServerSelectionTimeoutError  # Заменено на ServerSelectionTimeoutError
+import asyncpg
+from datetime import datetime
 
 # Установка уровня логирования
 logging.basicConfig(level=logging.DEBUG)
 
-# Подключение к MongoDB
-MONGO_URI = os.getenv('MONGO_URI')
+# Подключение к PostgreSQL
+DATABASE_URL = os.getenv('DATABASE_URL')
 
-if not MONGO_URI:
-    logging.error("MONGO_URI is not set.")
+if not DATABASE_URL:
+    logging.error("DATABASE_URL is not set.")
 else:
-    logging.info("MONGO_URI is set: %s", MONGO_URI)
+    logging.info("DATABASE_URL is set: %s", DATABASE_URL)
 
-try:
-    client = MongoClient(MONGO_URI)
-    # Попытка получить список баз данных для проверки подключения
-    client.list_database_names()
-    logging.info("Successfully connected to MongoDB.")
-except ServerSelectionTimeoutError as e:  # Заменено на ServerSelectionTimeoutError
-    logging.error("Failed to connect to MongoDB: %s", e)
-    client = None  # Убедитесь, что client установлен в None в случае ошибки
+async def connect_to_db():
+    try:
+        # Подключение к базе данных
+        conn = await asyncpg.connect(DATABASE_URL)
+        logging.info("Successfully connected to PostgreSQL.")
+        return conn
+    except Exception as e:
+        logging.error("Failed to connect to PostgreSQL: %s", e)
+        return None
 
-db = client['troll-bot'] if client else None
-
-def save_message(message):
-    if db is None:
+async def save_message(message):
+    conn = await connect_to_db()
+    if conn is None:
         logging.error("Database connection is not established. Message cannot be saved.")
         return
 
@@ -45,24 +45,29 @@ def save_message(message):
     logging.info('Saving message: %s', message_data)
 
     try:
-        # Сохранение сообщения в коллекцию "messages"
-        db.messages.insert_one(message_data)
+        # Сохранение сообщения в таблицу "messages"
+        await conn.execute('''
+            INSERT INTO messages(chat_id, user_id, text, date)
+            VALUES($1, $2, $3, $4)
+        ''', message_data['chat_id'], message_data['user_id'], message_data['text'], datetime.utcnow())
         logging.info('Message saved successfully.')
     except Exception as e:
         logging.error('Error saving message: %s', e)
+    finally:
+        await conn.close()  # Закрыть соединение
 
-def search_messages(chat_id, user_id=None):
-    if db is None:
+async def search_messages(chat_id, user_id=None):
+    conn = await connect_to_db()
+    if conn is None:
         logging.error("Database connection is not established. Cannot search for messages.")
         return []
 
-    query = {'chat_id': chat_id}
+    query = 'SELECT * FROM messages WHERE chat_id = $1'
+    values = [chat_id]
+
     if user_id is not None:
-        query['user_id'] = user_id
+        query += ' AND user_id = $2'
+        values.append(user_id)
     
     try:
-        messages = db.messages.find(query)
-        return list(messages)  # Возвращаем все найденные сообщения в виде списка
-    except Exception as e:
-        logging.error('Error searching messages: %s', e)
-        return []
+        messages = await conn.fetch(query, *v
