@@ -37,6 +37,8 @@ async def reply_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await reply_audio_message(context.bot, update.message.chat.id, reply_message)
     elif reply_type == 'gif':
         await reply_gif_message(context.bot, update.message.chat.id, random_word)
+    else:
+        log.warning('Unknown reply type: %s', reply_type)
 
 async def forward_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
@@ -54,6 +56,7 @@ async def forward_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def print_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('''Commands:
     /fwd <text>: Return some random message with words in <text>
+    /help: Show this help message.
     ''')
 
 def get_update_handler():
