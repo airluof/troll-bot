@@ -37,3 +37,15 @@ def save_message(message):
         logging.info('Message saved successfully.')
     except Exception as e:
         logging.error('Error saving message: %s', e)
+
+def search_messages(chat_id, user_id=None):
+    query = {'chat_id': chat_id}
+    if user_id is not None:
+        query['user_id'] = user_id
+    
+    try:
+        messages = db.messages.find(query)
+        return list(messages)  # Возвращаем все найденные сообщения в виде списка
+    except Exception as e:
+        logging.error('Error searching messages: %s', e)
+        return []
