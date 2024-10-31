@@ -1,6 +1,7 @@
 import os
 import logging
 from pymongo import MongoClient
+from pymongo.errors import ConnectionError
 
 # Установка уровня логирования
 logging.basicConfig(level=logging.DEBUG)
@@ -13,10 +14,22 @@ if not MONGO_URI:
 else:
     logging.info("MONGO_URI is set: %s", MONGO_URI)
 
-client = MongoClient(MONGO_URI)
-db = client['troll-bot']
+try:
+    client = MongoClient(MONGO_URI)
+    # Попытка получить список баз данных для проверки подключения
+    client.list_database_names()
+    logging.info("Successfully connected to MongoDB.")
+except ConnectionError as e:
+    logging.error("Failed to connect to MongoDB: %s", e)
+    client = None  # Убедитесь, что client установлен в None в случае ошибки
+
+db = client['troll-bot'] if client else None
 
 def save_message(message):
+    if db is None:
+        logging.error("Database connection is not established. Message cannot be saved.")
+        return
+
     # Проверка наличия необходимых атрибутов в сообщении
     if not hasattr(message, 'chat') or not hasattr(message, 'from_user') or not hasattr(message, 'text'):
         logging.warning('Message is missing required attributes.')
@@ -39,6 +52,10 @@ def save_message(message):
         logging.error('Error saving message: %s', e)
 
 def search_messages(chat_id, user_id=None):
+    if db is None:
+        logging.error("Database connection is not established. Cannot search for messages.")
+        return []
+
     query = {'chat_id': chat_id}
     if user_id is not None:
         query['user_id'] = user_id
