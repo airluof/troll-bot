@@ -1,7 +1,6 @@
 import os
 import logging
-import asyncpg
-from datetime import datetime
+import asyncpg  # Убедитесь, что этот пакет установлен
 
 # Установка уровня логирования
 logging.basicConfig(level=logging.DEBUG)
@@ -14,9 +13,8 @@ if not DATABASE_URL:
 else:
     logging.info("DATABASE_URL is set: %s", DATABASE_URL)
 
-async def connect_to_db():
+async def create_connection():
     try:
-        # Подключение к базе данных
         conn = await asyncpg.connect(DATABASE_URL)
         logging.info("Successfully connected to PostgreSQL.")
         return conn
@@ -24,8 +22,7 @@ async def connect_to_db():
         logging.error("Failed to connect to PostgreSQL: %s", e)
         return None
 
-async def save_message(message):
-    conn = await connect_to_db()
+async def save_message(conn, message):
     if conn is None:
         logging.error("Database connection is not established. Message cannot be saved.")
         return
@@ -41,34 +38,47 @@ async def save_message(message):
         'text': message.text,
         'date': message.date,
     }
-    
+
     logging.info('Saving message: %s', message_data)
 
     try:
-        # Сохранение сообщения в таблицу "messages"
-        await conn.execute('''
-            INSERT INTO messages(chat_id, user_id, text, date)
-            VALUES($1, $2, $3, $4)
-        ''', message_data['chat_id'], message_data['user_id'], message_data['text'], datetime.utcnow())
+        query = """
+        INSERT INTO messages(chat_id, user_id, text, date)
+        VALUES($1, $2, $3, $4)
+        """
+        await conn.execute(query, message_data['chat_id'], message_data['user_id'], message_data['text'], message_data['date'])
         logging.info('Message saved successfully.')
     except Exception as e:
         logging.error('Error saving message: %s', e)
-    finally:
-        await conn.close()  # Закрыть соединение
 
-async def search_messages(chat_id, user_id=None):
-    conn = await connect_to_db()
+async def search_messages(conn, chat_id, user_id=None):
     if conn is None:
         logging.error("Database connection is not established. Cannot search for messages.")
         return []
 
-    query = 'SELECT * FROM messages WHERE chat_id = $1'
-    values = [chat_id]
-
+    query = "SELECT * FROM messages WHERE chat_id = $1"
     if user_id is not None:
-        query += ' AND user_id = $2'
-        values.append(user_id)
-    
-    try:
-        messages = await conn.fetch(query, *v)
+        query += " AND user_id = $2"
 
+    try:
+        if user_id is not None:
+            messages = await conn.fetch(query, chat_id, user_id)
+        else:
+            messages = await conn.fetch(query, chat_id)
+        return messages  # Возвращаем все найденные сообщения
+    except Exception as e:
+        logging.error('Error searching messages: %s', e)
+        return []
+
+async def main():
+    conn = await create_connection()
+    # Здесь можете использовать функции save_message и search_messages
+    # Пример: await save_message(conn, some_message)
+    # Пример: await search_messages(conn, some_chat_id)
+
+    if conn:
+        await conn.close()  # Закрытие соединения с базой данных
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
