@@ -9,4 +9,5 @@ flask
 dnspython
 uvicorn==0.22.0
 asyncpg
+pymongo[srv]
 
