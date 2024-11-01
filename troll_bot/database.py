@@ -1,45 +1,39 @@
 import os
 import logging
-import asyncpg  # Убедитесь, что этот пакет установлен
+from pymongo import MongoClient  # Убедитесь, что этот пакет установлен
 
 # Установка уровня логирования
 logging.basicConfig(level=logging.DEBUG)
 
-# Подключение к PostgreSQL
-DATABASE_URL = os.getenv('DATABASE_URL')
+# Подключение к MongoDB
+MONGODB_URI = os.getenv('MONGODB_URI')
 
-if not DATABASE_URL:
-    logging.error("DATABASE_URL is not set.")
+if not MONGODB_URI:
+    logging.error("MONGODB_URI is not set.")
 else:
-    logging.info("DATABASE_URL is set: %s", DATABASE_URL)
+    logging.info("MONGODB_URI is set: %s", MONGODB_URI)
 
-async def create_connection():
+def create_connection():
     try:
-        conn = await asyncpg.connect(DATABASE_URL)
-        logging.info("Successfully connected to PostgreSQL.")
-        return conn
+        client = MongoClient(MONGODB_URI)
+        db = client['troll_bot_db']  # Замените на имя вашей базы данных
+        logging.info("Successfully connected to MongoDB.")
+        return db
     except Exception as e:
-        logging.error("Failed to connect to PostgreSQL: %s", e)
+        logging.error("Failed to connect to MongoDB: %s", e)
         return None
 
-async def create_table(conn):
-    query = """
-    CREATE TABLE IF NOT EXISTS messages (
-        id SERIAL PRIMARY KEY,
-        chat_id BIGINT NOT NULL,
-        user_id BIGINT NOT NULL,
-        text TEXT,
-        date TIMESTAMP
-    );
-    """
+def create_collection(db):
     try:
-        await conn.execute(query)
-        logging.info("Table 'messages' created successfully.")
+        collection = db['messages']  # Замените на имя вашей коллекции
+        logging.info("Collection 'messages' created successfully.")
+        return collection
     except Exception as e:
-        logging.error("Error creating table: %s", e)
+        logging.error("Error creating collection: %s", e)
+        return None
 
-async def save_message(conn, message):
-    if conn is None:
+def save_message(collection, message):
+    if collection is None:
         logging.error("Database connection is not established. Message cannot be saved.")
         return
 
@@ -58,43 +52,37 @@ async def save_message(conn, message):
     logging.info('Saving message: %s', message_data)
 
     try:
-        query = """
-        INSERT INTO messages(chat_id, user_id, text, date)
-        VALUES($1, $2, $3, $4)
-        """
-        await conn.execute(query, message_data['chat_id'], message_data['user_id'], message_data['text'], message_data['date'])
+        collection.insert_one(message_data)
         logging.info('Message saved successfully.')
     except Exception as e:
         logging.error('Error saving message: %s', e)
 
-async def search_messages(conn, chat_id, user_id=None):
-    if conn is None:
+def search_messages(collection, chat_id, user_id=None):
+    if collection is None:
         logging.error("Database connection is not established. Cannot search for messages.")
         return []
 
-    query = "SELECT * FROM messages WHERE chat_id = $1"
+    query = {'chat_id': chat_id}
     if user_id is not None:
-        query += " AND user_id = $2"
+        query['user_id'] = user_id
 
     try:
-        if user_id is not None:
-            messages = await conn.fetch(query, chat_id, user_id)
-        else:
-            messages = await conn.fetch(query, chat_id)
-        return messages  # Возвращаем все найденные сообщения
+        messages = list(collection.find(query))  # Возвращаем все найденные сообщения
+        return messages
     except Exception as e:
         logging.error('Error searching messages: %s', e)
         return []
 
-async def main():
-    conn = await create_connection()
-    if conn:
-        await create_table(conn)  # Создание таблицы при запуске
+def main():
+    db = create_connection()
+    if db:
+        collection = create_collection(db)  # Создание коллекции
         # Здесь можете использовать функции save_message и search_messages
-        # Пример: await save_message(conn, some_message)
-        # Пример: await search_messages(conn, some_chat_id)
-        await conn.close()  # Закрытие соединения с базой данных
+        # Пример: save_message(collection, some_message)
+        # Пример: messages = search_messages(collection, some_chat_id)
+        
+        # Закрытие соединения с MongoDB
+        db.client.close()
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    main()
