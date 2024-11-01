@@ -22,6 +22,22 @@ async def create_connection():
         logging.error("Failed to connect to PostgreSQL: %s", e)
         return None
 
+async def create_table(conn):
+    query = """
+    CREATE TABLE IF NOT EXISTS messages (
+        id SERIAL PRIMARY KEY,
+        chat_id BIGINT NOT NULL,
+        user_id BIGINT NOT NULL,
+        text TEXT,
+        date TIMESTAMP
+    );
+    """
+    try:
+        await conn.execute(query)
+        logging.info("Table 'messages' created successfully.")
+    except Exception as e:
+        logging.error("Error creating table: %s", e)
+
 async def save_message(conn, message):
     if conn is None:
         logging.error("Database connection is not established. Message cannot be saved.")
@@ -72,11 +88,11 @@ async def search_messages(conn, chat_id, user_id=None):
 
 async def main():
     conn = await create_connection()
-    # Здесь можете использовать функции save_message и search_messages
-    # Пример: await save_message(conn, some_message)
-    # Пример: await search_messages(conn, some_chat_id)
-
     if conn:
+        await create_table(conn)  # Создание таблицы при запуске
+        # Здесь можете использовать функции save_message и search_messages
+        # Пример: await save_message(conn, some_message)
+        # Пример: await search_messages(conn, some_chat_id)
         await conn.close()  # Закрытие соединения с базой данных
 
 if __name__ == "__main__":
