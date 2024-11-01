@@ -9,4 +9,4 @@ flask
 dnspython
 uvicorn==0.22.0
 asyncpg
-psycopg2-binary
+
